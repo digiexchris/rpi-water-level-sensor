@@ -1,0 +1,12 @@
+.sensor {
+  width: 200px;
+  height: 20px;
+}
+
+.sensor-on {
+  background-color:green;
+}
+
+.sensor-off {
+  background-color:red;
+}
