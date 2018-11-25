@@ -10,7 +10,7 @@ import (
 var App Config
 
 type Config struct {
-	PortName string
+	PortName string `json:"Port"`
 }
 
 func Load() error {
