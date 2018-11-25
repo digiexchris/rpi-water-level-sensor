@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/digiexchris/water-level-monitor/Sensors"
-	"github.com/digiexchris/water-level-monitor/httpserver"
+	"github.com/digiexchris/water-level-sensor/Sensors"
+	"github.com/digiexchris/water-level-sensor/httpserver"
 )
 
 var Reading chan Sensors.Reading
@@ -11,20 +11,23 @@ func main() {
 
 	Reading = make(chan Sensors.Reading)
 
-	//s := Sensors.New(Reading)
-	//
-	//s.Connect()
-	//s.Run()
+	s := Sensors.New(Reading)
+
+	err := s.Connect()
+	if err != nil {
+		panic(err)
+	}
+	s.Run()
 
 	server := httpserver.New()
 
-	//go func(r chan Sensors.Reading) {
-	//	for {
-	//		reading := <-r
-	//		server.SetReading(reading.Sensor, reading.On)
-	//	}
-	//
-	//}(Reading)
+	go func(r chan Sensors.Reading) {
+		for {
+			reading := <-r
+			server.SetReading(reading.Sensor, reading.On)
+		}
+
+	}(Reading)
 
 	server.Run()
 }
