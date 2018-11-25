@@ -1,6 +1,7 @@
 package Sensors
 
 import (
+	"github.com/digiexchris/water-level-sensor/configuration"
 	"github.com/tarm/serial"
 	"strconv"
 	"strings"
@@ -8,9 +9,9 @@ import (
 )
 
 /**
-	This feeds an array of booleans into a channel as readings, meaning
-	each sensor is either off or on
- */
+This feeds an array of booleans into a channel as readings, meaning
+each sensor is either off or on
+*/
 
 type Sensors interface {
 	Connect() error
@@ -20,23 +21,23 @@ type Sensors interface {
 
 type Reading struct {
 	Sensor int
-	On bool
-	Err error
+	On     bool
+	Err    error
 }
 
 type arduino struct {
 	options *serial.Config
 	channel chan Reading
-	port *serial.Port
-	stop bool
+	port    *serial.Port
+	stop    bool
 }
 
 func New(readings chan Reading) Sensors {
 
 	options := serial.Config{
-		Name: "/dev/arduino",
-		Baud: 19200,
-		StopBits: 1,
+		Name:        configuration.App.PortName,
+		Baud:        19200,
+		StopBits:    1,
 		ReadTimeout: time.Second * 30,
 	}
 
@@ -77,7 +78,7 @@ format: 1:1
 port number, on or off
 
 Will block until the arduino writes or 30 seconds happens
- */
+*/
 func (s *arduino) read() {
 	reading := Reading{}
 	buf := make([]byte, 3)
