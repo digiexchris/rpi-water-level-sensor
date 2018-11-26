@@ -6,7 +6,6 @@ import (
 	"github.com/digiexchris/water-level-sensor/sensors"
 	"github.com/jacobsa/go-serial/serial"
 	"io"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -93,7 +92,7 @@ func (s *arduino) read() {
 		}
 	}
 
-	log.Println(string(serialResponse))
+	//log.Println(string(serialResponse))
 
 	r := strings.Split(string(serialResponse), ":")
 

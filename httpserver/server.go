@@ -111,5 +111,8 @@ func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	log.Println(string(responseString))
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+
 	rw.Write(responseString)
 }

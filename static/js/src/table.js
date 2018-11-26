@@ -1,6 +1,8 @@
 import * as React from 'react';
 import Cell from './cell';
 
+import _ from 'lodash'
+
 export default class DataTable extends React.Component {
     renderHeadingRow = (_cell, cellIndex) => {
         const {headings} = this.props;
@@ -15,18 +17,14 @@ export default class DataTable extends React.Component {
     };
 
     renderRow = (_row, rowIndex) => {
-        const {rows} = this.props;
-
+        // const {rows} = this.props;
+        //console.log(_row, rowIndex);
         return (
             <tr key={`row-${rowIndex}`}>
-                {rows[rowIndex].map((_cell, cellIndex) => {
-                    return (
-                        <Cell
-                            key={`${rowIndex}-${cellIndex}`}
-                            content={rows[rowIndex][cellIndex]}
-                        />
-                    )
-                })}
+                <Cell
+                    key={`cell-${rowIndex}`}
+                    content={_row}
+                />
             </tr>
         )
     };
@@ -43,8 +41,7 @@ export default class DataTable extends React.Component {
             </tr>
         );
 
-        const tbodyMarkup = rows.map(this.renderRow);
-
+        const tbodyMarkup = _.values(rows).reverse().map(this.renderRow);
         return (
             <table className="Table">
                 <thead>{theadMarkup}</thead>
