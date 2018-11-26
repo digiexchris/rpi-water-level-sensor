@@ -27,12 +27,12 @@ class App extends Component {
                         ],
                     ]
                 },
-            errors: false
+            Error: false
         }
     }
 
     getNewData() {
-        fetch('http://localhost:8080/api/readings.json')
+        fetch('/api/readings.json')
             .then(
                 results => {
                     return results.json()
@@ -40,11 +40,11 @@ class App extends Component {
             ).then(
             data => {
                 //data.reverse();
-                this.setState({rows: data.Readings, errors: false})
+                this.setState({rows: data.Readings, Error: data.Error})
             }
         )
             .catch((e) => {
-            this.setState({errors: e.toString()});
+            this.setState({Error: e.toString()});
         })
     }
 
@@ -60,9 +60,9 @@ class App extends Component {
     }
 
     renderErrorWarnings () {
-        var errors = this.state.errors;
+        var errors = this.state.Error;
 
-        if(errors !== false) {
+        if(errors !== "false") {
             return (
                 <p className="error">An error has occurred. You should not trust these results. {errors}</p>
             )

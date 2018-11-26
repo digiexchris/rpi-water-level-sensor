@@ -1,3 +1,4 @@
 {
   "Port" : "/dev/arduino",
+  "HTTPPort" : 8080
 }

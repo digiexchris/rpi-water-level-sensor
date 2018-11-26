@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/digiexchris/water-level-sensor/configuration"
 	"log"
 	"net/http"
 	"os"
@@ -52,8 +53,10 @@ func (s *server) Run() {
 
 	var wait = time.Second * 15
 
+	host := fmt.Sprintf("0.0.0.0:%d", configuration.App.HTTPPort)
+
 	srv := &http.Server{
-		Addr: "0.0.0.0:8080",
+		Addr: host,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
@@ -98,12 +101,19 @@ func (s *server) SetError(err error) {
 }
 
 func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
+
+	var errorString = ""
+
+	if s.currentError != nil {
+		errorString = s.currentError.Error()
+	}
+
 	var d = struct {
 		Readings map[int]bool
-		Error    error
+		Error    string
 	}{
 		Readings: s.sensors,
-		Error:    nil,
+		Error:    errorString,
 	}
 
 	responseString, err := json.Marshal(d)

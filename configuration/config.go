@@ -11,6 +11,7 @@ var App Config
 
 type Config struct {
 	PortName string `json:"Port"`
+	HTTPPort int    `json:"HTTPPort"`
 }
 
 func Load() error {
