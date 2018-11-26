@@ -32,6 +32,7 @@ func main() {
 		for {
 			reading := <-r
 			server.SetReading(reading.Sensor, reading.On)
+			server.SetError(reading.Err)
 		}
 
 	}(Reading)

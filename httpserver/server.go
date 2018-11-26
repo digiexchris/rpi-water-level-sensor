@@ -12,22 +12,22 @@ import (
 )
 import "github.com/gorilla/mux"
 
-type Server interface{
+type Server interface {
 	Run()
 	SetReading(sensor int, on bool)
+	SetError(err error)
 }
 
 type server struct {
-	router *mux.Router
-	sensors map[int]bool
+	router       *mux.Router
+	sensors      map[int]bool
+	currentError error
 }
-
-var currentReadings *map[int]bool
-var currentError *error
 
 func New() Server {
 	s := server{
-		router: mux.NewRouter(),
+		sensors: make(map[int]bool),
+		router:  mux.NewRouter(),
 	}
 
 	dir, err := os.Getwd()
@@ -35,14 +35,14 @@ func New() Server {
 		panic(err)
 	}
 
-	index := fmt.Sprintf("%s/static/",dir)
+	index := fmt.Sprintf("%s/static/", dir)
 
 	s.router.Handle("/", http.FileServer(http.Dir(index)))
 
-	js := fmt.Sprintf("%s/static/js/build/static/",dir)
+	js := fmt.Sprintf("%s/static/js/build/static/", dir)
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(js))))
 
-	s.router.HandleFunc("/api/readings.json", ReadingsHandler)
+	s.router.HandleFunc("/api/readings.json", s.ReadingsHandler)
 
 	return &s
 }
@@ -53,12 +53,12 @@ func (s *server) Run() {
 	var wait = time.Second * 15
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:8080",
+		Addr: "0.0.0.0:8080",
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
-		Handler: s.router, // Pass our instance of gorilla/mux in.
+		Handler:      s.router, // Pass our instance of gorilla/mux in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
@@ -93,13 +93,17 @@ func (s *server) SetReading(sensor int, on bool) {
 	s.sensors[sensor] = on
 }
 
-func ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
-	var d =  struct {
+func (s *server) SetError(err error) {
+	s.currentError = nil
+}
+
+func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
+	var d = struct {
 		Readings map[int]bool
-		Error error
-	} {
-		Readings: *currentReadings,
-		Error: *currentError,
+		Error    error
+	}{
+		Readings: s.sensors,
+		Error:    nil,
 	}
 
 	responseString, err := json.Marshal(d)

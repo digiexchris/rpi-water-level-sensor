@@ -1,39 +1,42 @@
 package arduinoWaterSensor
 
 import (
+	"errors"
 	"github.com/digiexchris/water-level-sensor/configuration"
 	"github.com/digiexchris/water-level-sensor/sensors"
-	"github.com/tarm/serial"
+	"github.com/jacobsa/go-serial/serial"
+	"io"
+	"log"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type arduino struct {
-	options *serial.Config
+	options serial.OpenOptions
 	channel chan sensors.Reading
-	port    *serial.Port
+	port    io.ReadWriteCloser
 	stop    bool
 }
 
 func New(readings chan sensors.Reading) sensors.Sensors {
 
-	options := serial.Config{
-		Name:        configuration.App.PortName,
-		Baud:        19200,
-		StopBits:    1,
-		ReadTimeout: time.Second * 30,
+	options := serial.OpenOptions{
+		PortName:        configuration.App.PortName,
+		BaudRate:        19200,
+		DataBits:        8,
+		StopBits:        1,
+		MinimumReadSize: 4,
 	}
 
 	return &arduino{
-		options: &options,
+		options: options,
 		channel: readings,
 	}
 }
 
 func (s *arduino) Connect() error {
 	// Open the port.
-	port, err := serial.OpenPort(s.options)
+	port, err := serial.Open(s.options)
 	if err != nil {
 		return err
 	}
@@ -65,14 +68,36 @@ Will block until the arduinoWaterSensor writes or 30 seconds happens
 */
 func (s *arduino) read() {
 	reading := sensors.Reading{}
-	buf := make([]byte, 3)
-	_, err := s.port.Read(buf)
-	if err != nil {
-		reading.Err = err
-		s.channel <- reading
+	var done bool
+
+	var serialResponse []byte
+
+	buf := make([]byte, 1)
+	for done == false {
+		n, err := s.port.Read(buf)
+		if err != nil {
+			reading.Err = err
+			s.channel <- reading
+		}
+
+		if n == 0 {
+			reading.Err = errors.New("No data")
+			s.channel <- reading
+			return
+		}
+
+		if string(buf) != ";" {
+			serialResponse = append(serialResponse, buf[0])
+		} else {
+			done = true
+		}
 	}
 
-	r := strings.Split(string(buf), ",")
+	log.Println(string(serialResponse))
+
+	r := strings.Split(string(serialResponse), ":")
+
+	var err error
 
 	reading.Sensor, err = strconv.Atoi(r[0])
 	if err != nil {
