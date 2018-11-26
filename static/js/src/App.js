@@ -26,7 +26,8 @@ class App extends Component {
                             false
                         ],
                     ]
-                }
+                },
+            errors: false
         }
     }
 
@@ -39,9 +40,12 @@ class App extends Component {
             ).then(
             data => {
                 //data.reverse();
-                this.setState({rows: data.Readings})
+                this.setState({rows: data.Readings, errors: false})
             }
         )
+            .catch((e) => {
+            this.setState({errors: e.toString()});
+        })
     }
 
     componentDidMount() {
@@ -55,13 +59,34 @@ class App extends Component {
         clearInterval(this.timer)
     }
 
+    renderErrorWarnings () {
+        var errors = this.state.errors;
+
+        if(errors !== false) {
+            return (
+                <p className="error">An error has occurred. You should not trust these results. {errors}</p>
+            )
+        } else {
+            return (
+                <p>
+
+                </p>
+            )
+        }
+
+
+    };
+
     render() {
         const headings = [
             'Water Level Sensor',
         ];
 
+        const renderedErrors = this.renderErrorWarnings()
+
         return (
             <div className="App">
+                {renderedErrors}
                 <DataTable headings={headings} rows={this.state.rows}/>
             </div>
         );

@@ -10,3 +10,9 @@
 .sensor-off {
   background-color:red;
 }
+
+.error {
+  padding: 20px;
+  background-color: red;
+  color: white;
+}
