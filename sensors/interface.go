@@ -9,6 +9,7 @@ type Sensors interface {
 	Connect() error
 	Disconnect() error
 	Run()
+	Stop()
 }
 
 type Reading struct {

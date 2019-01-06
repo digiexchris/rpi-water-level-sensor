@@ -97,7 +97,7 @@ func (s *server) SetReading(sensor int, on bool) {
 }
 
 func (s *server) SetError(err error) {
-	s.currentError = nil
+	s.currentError = err
 }
 
 func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
@@ -107,6 +107,8 @@ func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
 	if s.currentError != nil {
 		errorString = s.currentError.Error()
 	}
+
+	//log.Println(s.sensors)
 
 	var d = struct {
 		Readings map[int]bool
@@ -121,7 +123,7 @@ func (s *server) ReadingsHandler(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	log.Println(string(responseString))
+	//log.Println(string(responseString))
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 
 	rw.Write(responseString)

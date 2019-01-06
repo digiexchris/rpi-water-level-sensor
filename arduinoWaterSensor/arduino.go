@@ -21,7 +21,7 @@ func New(readings chan sensors.Reading) sensors.Sensors {
 
 	options := serial.OpenOptions{
 		PortName:        configuration.App.PortName,
-		BaudRate:        19200,
+		BaudRate:        9600,
 		DataBits:        8,
 		StopBits:        1,
 		MinimumReadSize: 4,
@@ -54,10 +54,21 @@ func (s *arduino) Run() {
 	s.stop = false
 	go func(s *arduino) {
 		for s.stop == false {
-			s.read()
+			err := s.read()
+
+			if err != nil {
+				//the error has already been passed into the channel, just stop.
+				//the error handler will restart this
+				return
+			}
 		}
 	}(s)
 }
+
+func (s *arduino) Stop() {
+	s.stop = true
+}
+
 
 /**
 format: 1:1
@@ -65,7 +76,7 @@ port number, on or off
 
 Will block until the arduinoWaterSensor writes or 30 seconds happens
 */
-func (s *arduino) read() {
+func (s *arduino) read() error {
 	reading := sensors.Reading{}
 	var done bool
 
@@ -77,12 +88,15 @@ func (s *arduino) read() {
 		if err != nil {
 			reading.Err = err
 			s.channel <- reading
+			return err
 		}
+
+		//log.Println(string(buf))
 
 		if n == 0 {
 			reading.Err = errors.New("No data")
 			s.channel <- reading
-			return
+			return nil
 		}
 
 		if string(buf) != ";" {
@@ -92,9 +106,18 @@ func (s *arduino) read() {
 		}
 	}
 
+	if len(serialResponse) != 3 {
+		//throw out the result
+		//log.Println(len(serialResponse))
+		////log.Println(string(serialResponse))
+		//log.Println("incomplete result")
+		return nil
+	}
+
+	//log.Println("Good response")
 	//log.Println(string(serialResponse))
 
-	r := strings.Split(string(serialResponse), ":")
+	r := strings.Split(string(serialResponse), "&")
 
 	var err error
 
@@ -102,15 +125,16 @@ func (s *arduino) read() {
 	if err != nil {
 		reading.Err = err
 		s.channel <- reading
+		return err
 	}
 
 	on, err := strconv.Atoi(r[1])
 	if err != nil {
 		reading.Err = err
 		s.channel <- reading
+		return err
 	}
 
 	reading.On = on != 0
-
 	s.channel <- reading
 }
